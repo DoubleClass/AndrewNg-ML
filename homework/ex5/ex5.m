@@ -218,3 +218,47 @@ end
 
 fprintf('Program paused. Press enter to continue.\n');
 pause;
+
+%% =========== Part 9: test set error =============
+X_poly_test = polyFeatures(Xtest, p);
+X_poly_test = bsxfun(@minus, X_poly_test, mu);
+X_poly_test = bsxfun(@rdivide, X_poly_test, sigma);
+X_poly_test = [ones(size(X_poly_test, 1), 1), X_poly_test];           % Add Ones
+
+theta = trainLinearReg(X_poly, y,3); 
+error_val = linearRegCostFunction(X_poly_val, yval,theta,0)
+error_test = linearRegCostFunction(X_poly_test, ytest,theta,0)
+
+%% =========== Part 10: Learning Curve for random selected samples =============
+lambda = 0.01;
+m = size(X, 1);
+error_train = zeros(m, 1);
+error_val   = zeros(m, 1);
+repeat = 50;
+for i = 1:repeat
+    for j = 1:m
+        seq = randperm(m,j);%produce the random integer£¬random j in [1,m]
+        X_poly_rand = X_poly(seq,:);
+        y_rand = y(seq,:);
+        seq_val = randperm(m,j);
+        X_poly_val_rand = X_poly_val(seq_val,:);
+        yval_val_rand = yval(seq_val,:);
+        
+        [theta] = trainLinearReg(X_poly_rand, y_rand, lambda);
+        lam = 0;
+        [J, grad] = linearRegCostFunction(X_poly_rand, y_rand, theta, lam);
+        [Jval, gradval] = linearRegCostFunction(X_poly_val_rand, yval_val_rand, theta, lam);
+        error_train(j) = error_train(j) + J;
+        error_val(j) = error_val(j) + Jval;
+    end
+end
+error_train = error_train/repeat;
+error_val = error_val/repeat;
+
+plot(1:m, error_train, 1:m, error_val);
+title(sprintf('Polynomial Regression Learning Curve with random selected samples (lambda = %f)', lambda));
+legend('Train', 'Cross Validation')
+xlabel('Number of training examples')
+ylabel('Error')
+axis([0 13 0 100])
+
